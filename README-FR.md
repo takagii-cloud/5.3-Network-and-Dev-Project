@@ -13,13 +13,9 @@ Les projets intégrateurs ont pour objectifs de :
 ## 2. Contraintes Générales
 
 - Les machines virtuelles doivent être construites avec **VMware** ou **VirtualBox**.
-  - VMware Workstation Pro 17.x (sous Linux ou Windows) ou VirtualBox 7.2.2.
-  - Sur macOS : VMware Fusion 13 ou VirtualBox 7.2.2.
-  - Sur les Macs ARM : UTM peut être utilisé, avec d’éventuelles limitations de performances.
 - Tout développement logiciel doit être réalisé en **langage C**, avec **programmation socket** pour la partie réseau.
 - Un gestionnaire de version **Git** doit être utilisé.
 - Les projets sont **individuels** (pas de travail en groupe).
-- L’utilisation de **ChatGPT ou d’outils similaires** est autorisée.
 
 ---
 

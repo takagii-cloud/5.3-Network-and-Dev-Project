@@ -12,13 +12,9 @@ The integrative projects aim to:
 ## 2. General Constraints
 
 - Virtual machines must be built using **VMware** or **VirtualBox**.
-  - VMware Workstation Pro 17.x (Linux or Windows) or VirtualBox 7.2.2.
-  - On macOS: VMware Fusion 13 or VirtualBox 7.2.2.
-  - ARM Macs may use UTM, with possible performance limitations.
 - All software development must be done using **C**, with **socket programming** for networking.
 - A **Git version manager** must be used.
 - Projects are **individual** (no group work).
-- Students may use **ChatGPT or similar tools**.
 
 ---
 
