@@ -7,9 +7,6 @@ The integrative projects aim to:
 - Familiarize students with the main tools used in the program, including VMware, VirtualBox, Git, development tools, and system/network administration tools.
 - Apply concepts related to software development, operating systems, and networking acquired during semester 5 and previous studies.
 - Develop autonomy and time management skills.
-
-Several mini-projects must be completed individually during semester 5. Project sessions total **22 hours**, and the deadline is **January 26th, 2026**.
-
 ---
 
 ## 2. General Constraints
