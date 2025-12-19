@@ -47,12 +47,19 @@ int main(int argc, char *argv[]){
 
   if(getifaddrs(&ifaddr)==-1){ perror("getifaddrs"); return 1; }
 
+  const char *last_if = NULL;
+
   for(ifa=ifaddr; ifa; ifa=ifa->ifa_next){
     if(!ifa->ifa_addr) continue;
     int fam = ifa->ifa_addr->sa_family;
     if(fam!=AF_INET && fam!=AF_INET6) continue;
 
     if(!all && filter && strcmp(ifa->ifa_name, filter) != 0) continue;
+
+    if(all && (!last_if || strcmp(last_if, ifa->ifa_name) != 0)){
+      printf("%s:\n", ifa->ifa_name);
+      last_if = ifa->ifa_name;
+    }
 
     void *src = (fam==AF_INET)
       ? (void*)&((struct sockaddr_in*)ifa->ifa_addr)->sin_addr
@@ -62,8 +69,8 @@ int main(int argc, char *argv[]){
 
     int pfx = prefixlen_from_netmask(ifa->ifa_netmask);
 
-    printf("%s %s %s/%d\n",
-           ifa->ifa_name,
+    if(all) printf("  ");
+    printf("%s %s/%d\n",
            (fam==AF_INET) ? "IPv4" : "IPv6",
            buf, pfx);
   }
