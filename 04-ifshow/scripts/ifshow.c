@@ -10,11 +10,23 @@ static void usage(const char *p){
 
 static int pop8(unsigned char x){ int c=0; while(x){ c+=x&1u; x>>=1u; } return c; }
 
-static int ipv4_prefixlen(const struct sockaddr *nm){
-  if(!nm || nm->sa_family != AF_INET) return 0;
-  const unsigned char *b =
-    (const unsigned char*)&((const struct sockaddr_in*)nm)->sin_addr;
-  return pop8(b[0]) + pop8(b[1]) + pop8(b[2]) + pop8(b[3]);
+static int prefixlen_from_netmask(const struct sockaddr *nm){
+  if(!nm) return 0;
+
+  if(nm->sa_family == AF_INET){
+    const unsigned char *b =
+      (const unsigned char*)&((const struct sockaddr_in*)nm)->sin_addr;
+    return pop8(b[0]) + pop8(b[1]) + pop8(b[2]) + pop8(b[3]);
+  }
+
+  if(nm->sa_family == AF_INET6){
+    const unsigned char *b =
+      (const unsigned char*)&((const struct sockaddr_in6*)nm)->sin6_addr;
+    int s=0; for(int i=0;i<16;i++) s += pop8(b[i]);
+    return s;
+  }
+
+  return 0;
 }
 
 int main(int argc, char *argv[]){
@@ -48,7 +60,7 @@ int main(int argc, char *argv[]){
 
     if(!inet_ntop(fam, src, buf, sizeof(buf))) continue;
 
-    int pfx = (fam==AF_INET) ? ipv4_prefixlen(ifa->ifa_netmask) : 0;
+    int pfx = prefixlen_from_netmask(ifa->ifa_netmask);
 
     printf("%s %s %s/%d\n",
            ifa->ifa_name,
