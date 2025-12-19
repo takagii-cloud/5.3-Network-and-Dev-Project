@@ -62,7 +62,7 @@ static void run_show(const char *filter, int show_all){
 
   freeifaddrs(list);
 }
-
+        
 int main(int argc, char *argv[]){
   int opt, show_all=0; const char *ifname=NULL;
 
