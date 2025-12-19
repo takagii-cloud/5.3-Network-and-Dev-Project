@@ -1,9 +1,19 @@
 #include <stdio.h>
+#include <string.h>
 #include <ifaddrs.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-int main(void){
+static void usage(const char *p){
+  fprintf(stderr, "Usage: %s -a\n", p);
+}
+
+int main(int argc, char *argv[]){
+  if(argc != 2 || strcmp(argv[1], "-a") != 0){
+    usage(argv[0]);
+    return 2;
+  }
+
   struct ifaddrs *ifaddr=NULL, *ifa=NULL;
   char buf[INET6_ADDRSTRLEN];
 
