@@ -40,8 +40,6 @@ Sur VirtualBox :
 
 Notre machine est prête pour son premier démarrage.
 
-![image-20251112092934915](/home/takagii/.config/Typora/typora-user-images/image-20251112092934915.png)
-
 ---
 
 ### 1.2 Intégrer automatiquement le clavier azerty
@@ -111,11 +109,7 @@ Si l'on clone notre premier routeur virtuel, le clone effectué devra prendre de
 
 On essaie de faire un premier clone en générant de nouvelles adresses MAC pour toutes les interfaces réseau.
 
-![image-20251112105939163](/home/takagii/.config/Typora/typora-user-images/image-20251112105939163.png)
-
-En démarrant notre clone on remarque le soucis suivant :
-
-![image-20251112110132807](/home/takagii/.config/Typora/typora-user-images/image-20251112110132807.png)
+En démarrant notre clone on remarque le soucis suivant.
 
 Les interfaces réseaux commencent par `eth4`. Du fait que notre routeur originel s'arrêtait à `eth3` car il avait 4 quatre interfaces. On peut désormais supprimer ce clone de test et tout les fichiers associés.
 
@@ -147,9 +141,7 @@ Ainsi on démarre notre machine originelle `VyOS-og`. On passe en mode configura
 
 On peut désormais faire notre nouveau clone avec pour `OS Installation Options : Générer de nouvelles adresses MAC pour toutes les interfaces réseau`.
 
-On démarre notre nouveau clone afin de vérifier l'homogénéité des adresses.
-
-![image-20251112195730612](/home/takagii/.config/Typora/typora-user-images/image-20251112195730612.png)Les interfaces de la machine virtuelle commencent bien à partir de `eth0` et sont incrémentées de 1.
+On démarre notre nouveau clone afin de vérifier l'homogénéité des adresses. Les interfaces de la machine virtuelle commencent bien à partir de `eth0` et sont incrémentées de 1.
 
 ---
 

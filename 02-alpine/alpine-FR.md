@@ -33,17 +33,12 @@ Sur VirtualBox:
 
 4. Choisir les spécifications Hardware
 
-   ![image-20251112212508550](/home/takagii/.config/Typora/typora-user-images/image-20251112212508550.png)
 
 On laisse les spécifications par défaut pour notre première machine virtuelle.
 
 5. Choisir les spécifications pour le disque virtuel puis confirmer les choix.
 
-![image-20251112213036587](/home/takagii/.config/Typora/typora-user-images/image-20251112213036587.png)
-
 Notre machine est prête pour son première démarrage.
-
-![image-20251112213547509](/home/takagii/.config/Typora/typora-user-images/image-20251112213547509.png)
 
 ---
 
