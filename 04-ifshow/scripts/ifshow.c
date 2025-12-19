@@ -8,6 +8,15 @@ static void usage(const char *p){
   fprintf(stderr, "Usage: %s -a | %s -i <ifname>\n", p, p);
 }
 
+static int pop8(unsigned char x){ int c=0; while(x){ c+=x&1u; x>>=1u; } return c; }
+
+static int ipv4_prefixlen(const struct sockaddr *nm){
+  if(!nm || nm->sa_family != AF_INET) return 0;
+  const unsigned char *b =
+    (const unsigned char*)&((const struct sockaddr_in*)nm)->sin_addr;
+  return pop8(b[0]) + pop8(b[1]) + pop8(b[2]) + pop8(b[3]);
+}
+
 int main(int argc, char *argv[]){
   int all = 0;
   const char *filter = NULL;
@@ -39,10 +48,12 @@ int main(int argc, char *argv[]){
 
     if(!inet_ntop(fam, src, buf, sizeof(buf))) continue;
 
-    printf("%s %s %s\n",
+    int pfx = (fam==AF_INET) ? ipv4_prefixlen(ifa->ifa_netmask) : 0;
+
+    printf("%s %s %s/%d\n",
            ifa->ifa_name,
            (fam==AF_INET) ? "IPv4" : "IPv6",
-           buf);
+           buf, pfx);
   }
 
   freeifaddrs(ifaddr);
