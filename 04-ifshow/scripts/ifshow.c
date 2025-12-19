@@ -38,7 +38,11 @@ int main(int argc, char *argv[]){
       : (void*)&((struct sockaddr_in6*)ifa->ifa_addr)->sin6_addr;
 
     if(!inet_ntop(fam, src, buf, sizeof(buf))) continue;
-    printf("%s %s\n", ifa->ifa_name, buf);
+
+    printf("%s %s %s\n",
+           ifa->ifa_name,
+           (fam==AF_INET) ? "IPv4" : "IPv6",
+           buf);
   }
 
   freeifaddrs(ifaddr);
