@@ -414,9 +414,66 @@ IPv4 192.168.1.10/24 IPv6 fe80::a00:27ff:fe12:3456/64
 
 ### 4.3 Intégrer la commande *ifshow* à la machine virtuelle Alpine Linux du mini-projet 2
 
-#### Etape 1
+#### Récupérer `ifshow.c` sur la machine Alpine
 
+On lance un serveur http sur la machine de développement en étant sur le répertoire sur lequel se trouve le script.
 
+```shell
+python3 -m http.server 8000
+```
+
+On garde ce terminal ouvert.
+
+Sur la machine alpine on récupère le fichier avec `wget`.
+
+```shell
+wget http://10.0.2.8:8000/ifshow.c -O /root/ifshow.c
+```
+
+---
+
+#### Installer un compilateur sur Alpine Linux
+
+```shell
+apk add build-base
+```
+
+---
+
+#### Compiler le script
+
+```shell
+gcc ifshow.c -o ifshow
+```
+
+---
+
+ #### Test de la commande `ifshow`
+
+```shell
+./ifshow -a
+./ifshow -i eth0
+```
+
+---
+
+#### Intégration de la commande
+
+```shell
+install -m 0755 ifshow /usr/local/bin/ifshow
+```
+
+---
+
+#### Test de l'intégration
+
+On essaie d'utiliser la commande `ifshow`.
+
+```shell
+ifshow -a
+```
+
+Tout est bien fonctionnel. Nous pouvons passer à l'intégration sur MicroCore.
 
 ---
 
@@ -424,15 +481,13 @@ IPv4 192.168.1.10/24 IPv6 fe80::a00:27ff:fe12:3456/64
 
 #### Récupérer `ifshow.c` sur la machine MicroCore
 
-On débute par lancer un serveur http sur la machine de développement en tant sur le répertoire sur lequel se trouve le script. 
+On lance le serveur http sur la machine de développement en étant sur le répertoire sur lequel se trouve le script. 
 
 ```shell
 python3 -m http.server 8000
 ```
 
 On garde ce terminal ouvert
-
-
 
 Sur la machine MicroCore on télécharge le fichier avec `wget`.
 
@@ -462,7 +517,7 @@ gcc -std=gnu99 -Wall -Wextra -O2 ifshow.c -o ifshow
 
 ---
 
-#### Test du script
+#### Test de la commande `ifshow`
 
 ```shell
 ./ifshow -a
@@ -473,6 +528,8 @@ gcc -std=gnu99 -Wall -Wextra -O2 ifshow.c -o ifshow
 
 #### Intégration de la commande 
 
+On crée un répertoire que nous allons ajouter au **PATH**.
+
 ```shell
 mkdir -p /home/tc/bin
 cp /home/tc/ifshow /home/tc/bin/ifshow
@@ -480,7 +537,7 @@ chmod +x /home/tc/bin/ifshow
 ```
 
 
-Ajout de `bin` au PATH
+Ajout de `bin` au **PATH**.
 
 ```shell
 echo 'export PATH=$PATH:/home/tc/bin' >> /home/tc/.profile
@@ -488,9 +545,14 @@ echo 'export PATH=$PATH:/home/tc/bin' >> /home/tc/.profile
 ifshow -a
 ```
 
+---
 
+#### Test de l'intégration
 
-On finit par sauvegarder avec `filetool.sh -b`.
+```shell
+ifshow -a
+```
 
 ---
 
+On finit par sauvegarder avec `filetool.sh -b`.
