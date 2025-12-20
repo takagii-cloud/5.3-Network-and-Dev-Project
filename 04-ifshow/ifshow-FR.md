@@ -412,10 +412,56 @@ IPv4 192.168.1.10/24 IPv6 fe80::a00:27ff:fe12:3456/64
 
 ---
 
-### 4.3 Intégrer la commande *ifshow* à la machine virtuelle MicroCore du mini-projet 2
+### 4.3 Intégrer la commande *ifshow* à la machine virtuelle Alpine Linux du mini-projet 2
 
+On peut récupérer le script depuis notre Github, par exemple. Puis on le compile avant de l'exécuter.
 
+Le script fonctionne correctement.
 
 ---
 
 ### 4.4 Intégrer la commande *ifshow* à la machine virtuelle MicroCore du mini-projet 3
+
+On installe `openssh` client sur la machine cible Microcore.
+
+```shell
+tce-load -wi openssh
+sudo /usr/local/etc/init.d/openssh start
+```
+
+
+
+On installe `openssh` server sur la machine cible sur laquelle se trouve le script.
+
+```shell
+sudo apt update
+sudo apt install -y openssh-server
+sudo systemctl enable --now ssh
+sudo systemctl status ssh --no-pager
+```
+
+
+
+Puis on finit par utiliser`scp` pour récupérer le script.
+
+```shell
+scp ataha@10.0.2.8:/home/ataha/Documents/5.3-Network-and-Dev-Project/04-ifshow/scripts/ifshow.c /home/tc
+```
+
+
+
+On installe `compiletc` qui fournit `gcc`, `make` et les outils de base.
+
+```shell
+tce-load -wi compiletc
+```
+
+
+
+On compile enfin notre script en **GNU extensions**.
+
+```shell
+gcc -std=gnu99 -Wall -Wextra -O2 ifshow.c -o ifshow.out
+```
+
+Cela permet de rendre visibles des fonctions et variables comme `getopt()`.
