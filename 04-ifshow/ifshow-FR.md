@@ -414,54 +414,83 @@ IPv4 192.168.1.10/24 IPv6 fe80::a00:27ff:fe12:3456/64
 
 ### 4.3 Intégrer la commande *ifshow* à la machine virtuelle Alpine Linux du mini-projet 2
 
-On peut récupérer le script depuis notre Github, par exemple. Puis on le compile avant de l'exécuter.
+#### Etape 1
 
-Le script fonctionne correctement.
+
 
 ---
 
 ### 4.4 Intégrer la commande *ifshow* à la machine virtuelle MicroCore du mini-projet 3
 
-On installe `openssh` client sur la machine cible Microcore.
+#### Récupérer `ifshow.c` sur la machine MicroCore
+
+On débute par lancer un serveur http sur la machine de développement en tant sur le répertoire sur lequel se trouve le script. 
 
 ```shell
-tce-load -wi openssh
-sudo /usr/local/etc/init.d/openssh start
+python3 -m http.server 8000
 ```
 
+On garde ce terminal ouvert
 
 
-On installe `openssh` server sur la machine cible sur laquelle se trouve le script.
+
+Sur la machine MicroCore on télécharge le fichier avec `wget`.
 
 ```shell
-sudo apt update
-sudo apt install -y openssh-server
-sudo systemctl enable --now ssh
-sudo systemctl status ssh --no-pager
+wget http://IP_MACHINE_DEV:8000/ifshow.c -O /home/tc/ifshow.c
 ```
 
+---
 
+#### Installer un compilateur sur MicroCore
 
-Puis on finit par utiliser`scp` pour récupérer le script.
-
-```shell
-scp ataha@10.0.2.8:/home/ataha/Documents/5.3-Network-and-Dev-Project/04-ifshow/scripts/ifshow.c /home/tc
-```
-
-
-
-On installe `compiletc` qui fournit `gcc`, `make` et les outils de base.
+On installe un environnement de compilation
 
 ```shell
 tce-load -wi compiletc
 ```
 
+---
 
+#### Compiler
 
-On compile enfin notre script en **GNU extensions**.
+On compile en **gnu99** :
 
 ```shell
-gcc -std=gnu99 -Wall -Wextra -O2 ifshow.c -o ifshow.out
+gcc -std=gnu99 -Wall -Wextra -O2 ifshow.c -o ifshow
 ```
 
-Cela permet de rendre visibles des fonctions et variables comme `getopt()`.
+---
+
+#### Test du script
+
+```shell
+./ifshow -a
+./ifshow -i eth0
+```
+
+---
+
+#### Intégration de la commande 
+
+```shell
+mkdir -p /home/tc/bin
+cp /home/tc/ifshow /home/tc/bin/ifshow
+chmod +x /home/tc/bin/ifshow
+```
+
+
+Ajout de `bin` au PATH
+
+```shell
+echo 'export PATH=$PATH:/home/tc/bin' >> /home/tc/.profile
+. /home/tc/.profile
+ifshow -a
+```
+
+
+
+On finit par sauvegarder avec `filetool.sh -b`.
+
+---
+
