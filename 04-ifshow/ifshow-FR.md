@@ -408,6 +408,24 @@ IPv4 192.168.1.10/24 IPv6 fe80::a00:27ff:fe12:3456/64
 
 ### 4.2 Intégrer la commande *ifshow* à la machine virtuelle VyOS du mini-projet 1
 
+#### Récupérer `ifshow.c` sur la machine VyOS
+
+On lance un serveur http sur la machine de développement en étant sur le répertoire sur lequel se trouve le binaire.
+
+```shell
+python3 -m http.server 8000
+```
+
+On garde ce terminal ouvert.
+
+On créé un répertoire tools et l'on récupère avec `curl` le binaire.
+
+```shell
+mkdir -p /config/scripts/tools
+curl -L http://10.0.2.8:8000/ifshow -o /config/scripts/tools/ifshow
+chmod +x /config/scripts/tools/ifshow
+```
+
 
 
 ---
@@ -416,7 +434,7 @@ IPv4 192.168.1.10/24 IPv6 fe80::a00:27ff:fe12:3456/64
 
 #### Récupérer `ifshow.c` sur la machine Alpine
 
-On lance un serveur http sur la machine de développement en étant sur le répertoire sur lequel se trouve le script.
+On lance le serveur http sur la machine de développement en étant sur le répertoire sur lequel se trouve le script.
 
 ```shell
 python3 -m http.server 8000
