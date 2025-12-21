@@ -217,7 +217,6 @@ void *addr = (af==AF_INET)
 **Conversion binaire → texte**
 
 ```
-
   if(!inet_ntop(af, addr, ip, sizeof(ip))) return;
 ```
 
@@ -423,10 +422,45 @@ On créé un répertoire tools et l'on récupère avec `curl` le binaire.
 ```shell
 mkdir -p /config/scripts/tools
 curl -L http://10.0.2.8:8000/ifshow -o /config/scripts/tools/ifshow
-chmod +x /config/scripts/tools/ifshow
+chmod 755 /config/scripts/tools/ifshow
 ```
 
+---
 
+#### Test de la commande
+
+En se plaçant dans le répertoire `tools` on utilise la commande `ifshow`.
+
+```shell
+./ifshow -a
+./ifshow -i eth0
+```
+
+---
+
+#### Intégration de la commande
+
+On créé un lien au boot via `vyos-postconfig-bootup/script`.
+
+```shell
+sudo tee /config/scripts/vyos-postconfig-bootup.script >/dev/null <<'EOF'
+#!/bin/sh
+ln -sf /config/scripts/tools/ifshow /usr/local/bin/ifshow
+EOF
+
+sudo chmod +x /config/scripts/vyos-postconfig-bootup.script
+```
+
+---
+
+#### Test de l'intégration
+
+```shell
+sudo ln -sf /config/scrips/tools/ifshow /usr/local/bin/ifshow
+ifshow -a
+```
+
+Tout fonctionne.
 
 ---
 
