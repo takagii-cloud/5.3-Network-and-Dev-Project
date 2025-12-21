@@ -9,7 +9,7 @@ Cette documentation a pour but d'expliquer le script `ifnetshow`.
 - Compilateur fonctionnel
 - Code fonctionnel `ifnetshow`
 - Machine de développement
-- Machine de test
+- Machine deux machines de test
 - Avoir fini les mini-projets 1,2 et 3
 - Gestion de versions par Git
 
