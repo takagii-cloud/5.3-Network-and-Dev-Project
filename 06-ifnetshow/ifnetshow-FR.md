@@ -1002,7 +1002,120 @@ int main(int argc, char *argv[]){
 
 ### 6.2 Intégrer la commande *ifnetshow* et son agent (persistant ou non) au système VyOS du mini-projet 1
 
+#### Préparer les binaires
 
+Sur la machine de développement on compile :
+
+```shell
+gcc -Wall -Wextra -O2 ifnetshow.c  -o ifnetshow
+gcc -Wall -Wextra -O2 ifnetshowd.c -o ifnetshowd
+```
+
+> VyOS étant basé sur Debian, copier des binaires compilés sur Debian x86_64 marche généralement bien
+
+---
+
+#### Créer l'emplacement persistant
+
+Sur VyOS :
+
+```shell
+mkdir -p /config/scripts/tools
+```
+
+---
+
+#### Copier les binaires avec HTTP
+
+Sur la machine de développement :
+
+```shell
+python3 -m http.server 8000
+```
+
+
+
+Sur VyOS :
+
+```
+curl -L http://10.0.2.8:8000/ifnetshow  -o /config/scripts/tools/ifnetshow
+curl -L http://10.0.2.8:8000/ifnetshowd -o /config/scripts/tools/ifnetshowd
+chmod 755 /config/scripts/tools/ifnetshow /config/scripts/tools/ifnetshowd
+```
+
+---
+
+#### Créer le script de boot
+
+On édite le fichier `/config/scripts/vyos-postconfig-bootup.script` :
+
+```shell
+#!/bin/sh
+# Projet 06 - intégration ifnetshow/ifnetshowd
+
+# 1. Binaires exécutables
+install -m 0755 /config/scripts/tools/ifnetshow  /usr/local/bin/ifnetshow
+install -m 0755 /config/scripts/tools/ifnetshowd /usr/local/bin/ifnetshowd
+
+# 2. Démarrer l'agent si il n'est pas lancé
+if ! pgrep -x ifnetshowd >/dev/null 2>&1; then
+  nohup /usr/local/bin/ifnetshowd >/tmp/ifnetshowd.log 2>&1 &
+fi
+```
+
+On le rend ensuite exécutable :
+
+```shell
+sudo chmod +x /config/scripts/vyos-postconfig-bootup.script
+```
+
+---
+
+#### Test immédiat
+
+```shell
+sudo /config/scripts/vyos-postconfig-bootup.script
+```
+
+
+
+On vérifie que l'agent tourne :
+
+```shell
+pgrep -a ifnetshowd
+sudo ss -lntp | grep 9090 || sudo netstat -lntp | grep 9090
+```
+
+
+
+On vérifie que les commandes sont bien disponibles :
+
+```shell
+which ifnetshow
+which ifnetshowd
+```
+
+---
+
+#### Tests locaux
+
+Depuis VyOS :
+
+```shell
+ifnetshow -n 127.0.0.1 -a
+ifnetshow -n 127.0.0.1 -i eth0
+```
+
+
+
+Depuis la machine de développement :
+
+```shell
+ifnetshow -n 10.0.2.9 -a
+ifnetshow -n 10.0.2.9 -i eth0
+```
+
+Tout fonctionne.
 
 ---
 
