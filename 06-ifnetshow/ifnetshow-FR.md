@@ -1121,7 +1121,133 @@ Tout fonctionne.
 
 ### 6.3 Intégrer la commande *ifnetshow* et son agent (persistant ou non) au système Alpine du mini-projet 2
 
+#### Récupérer les scripts
 
+Sur la machine de développement :
+
+```shell
+python3 -m http.server 8000
+```
+
+
+
+Sur Alpine :
+
+```shell
+mkdir -p /root/tools
+cd /root/tools
+
+wget http://10.0.2.8:8000/ifshow.c -o ifshow.c
+wget http://10.0.2.8:8000/ifnetshow.c -o ifnetshow.c
+wget http://10.0.2.8:8000/ifnetshowd.c -o ifnetshowd.c
+```
+
+---
+
+#### Installer les outils de compilation
+
+Sur Alpine :
+
+```shell
+apk update
+apk add build-base
+```
+
+---
+
+#### Compilation
+
+```shell
+gcc -Wall -Wextra -O2 ifnetshow.c  -o ifnetshow
+gcc -Wall -Wextra -O2 ifnetshowd.c -o ifnetshowd
+```
+
+---
+
+#### Test
+
+##### Lancer l'agent
+
+```shell
+./ifnetshowd
+```
+
+
+
+##### Lancer l'agent en arrière plan
+
+```shell
+nohup ./ifnetshowd >/tmp/ifnetshowd.log 2>&1 &
+```
+
+
+
+##### Test du client en local
+
+```shell
+./ifnetshow -n 127.0.0.1 -a
+./ifnetshow -n 127.0.0.1 -i eth0
+```
+
+---
+
+#### Intégrer dans le système
+
+On installe les binaires dans `/usr/local/bin` :
+
+```shell
+install -m 0755 ifnetshow  /usr/local/bin/ifnetshow
+install -m 0755 ifnetshowd /usr/local/bin/ifnetshowd
+```
+
+---
+
+#### Démarrage automatique (OpenRC)
+
+Alpine utilise **OpenRC**. De ce fait on crée un service `ifnetshowd`.
+
+`cat >/etc/init.d/ifnetshowd <<'EOF'`
+
+```shell
+#!/sbin/openrc-run
+
+name="ifnetshowd"
+description="Agent projet 06 (ifnetshowd)"
+command="/usr/local/bin/ifnetshowd"
+command_background="yes"
+pidfile="/run/ifnetshowd.pid"
+output_log="/var/log/ifnetshowd.log"
+error_log="/var/log/ifnetshowd.log"
+
+depend() {
+  need net
+}
+
+start_pre() {
+  checkpath -f -m 0644 -o root:root /var/log/ifnetshowd.log
+}
+EOF
+```
+
+`chmod +x /etc/init.d/ifnetshowd`
+
+#### Activer au boot
+
+```shell
+rc-update add ifnetshowd default
+rc-service ifnetshowd start
+```
+
+---
+
+#### Test depuis une autre machine
+
+Depuis la machine de développement :
+
+```shell
+ifnetshow -n 10.0.2.14 -a
+ifnetshow -n 10.0.2.14 -i eth0
+```
 
 ---
 
