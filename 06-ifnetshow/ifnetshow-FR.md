@@ -7,7 +7,7 @@ Cette documentation a pour but d'expliquer le script `ifnetshow`.
 ### Prérequis
 
 - Compilateur fonctionnel
-- Code fonctionnel `ifnetshow`
+- Code fonctionnel `ifshow`
 - Machine de développement
 -  Deux machines de test
 - Avoir fini les mini-projets 1,2 et 3
@@ -1253,5 +1253,130 @@ ifnetshow -n 10.0.2.14 -i eth0
 
 ### 6.4 Intégrer la commande *ifnetshow* et son agent (persistant ou non) au système MicroCore du mini-projet 3
 
+#### Récupérer les scripts
+
+Sur la machine de développement :
+
+```shell
+python3 -m http.server 8000
+```
+
+ 
+
+Sur Microcore :
+
+```shell
+cd /home/tc
+wget http://10.0.2.15:8000/ifshow.c     -O ifshow.c
+wget http://10.0.2.15:8000/ifnetshow.c  -O ifnetshow.c
+wget http://10.0.2.15:8000/ifnetshowd.c -O ifnetshowd.c
+```
+
+---
+
+#### Installer l'environnement graphique de compilation
+
+```shell
+tce-load -wi compiletc
+```
+
+----
+
+#### Compiler
+
+```shell
+gcc -std=gnu99 -Wall -Wextra -O2 ifnetshow.c  -o ifnetshow
+gcc -std=gnu99 -Wall -Wextra -O2 ifnetshowd.c -o ifnetshowd
+```
+
+----
+
+#### Test
+
+```shell
+./ifnetshowd
+```
+
+L'agent écoute bien sur le port 9090.
+
+---
+
+#### Test en local
+
+```shell
+./ifnetshow -n 127.0.0.1 -a
+./ifnetshow -n 127.0.0.1 -i eth0
+```
+
+----
+
+#### Intégration
+
+```shell
+mkdir -p /home/tc/bin
+cp /home/tc/ifnetshow  /home/tc/bin/ifnetshow
+cp /home/tc/ifnetshowd /home/tc/bin/ifnetshowd
+chmod 755 /home/tc/bin/ifnetshow /home/tc/bin/ifnetshowd
+```
 
 
+
+Ajout de `/home/tc/bin` au PATH :
+
+```shell
+echo 'export PATH=$PATH:/home/tc/bin' >> /home/tc/.profile
+. /home/tc/.profile
+```
+
+
+
+**Test**
+
+```shell
+ifnetshow -n 127.0.0.1 -a
+```
+
+---
+
+#### Démarrage automatique de l'agent au boot
+
+`sudo vi /opt/bootlocal.sh`
+
+```shell
+#!/bin/sh
+
+export PATH=$PATH:/home/tc/bin
+
+if ! ps | grep -q "[i]fnetshowd"; then
+  nohup /home/tc/bin/ifnetshowd >/tmp/ifnetshowd.log 2>&1 &
+fi
+```
+
+`sudo chmod +x /opt/bootlocal.sh`
+
+---
+
+#### Persistance
+
+On sauvegarde :
+
+```shell
+filetool.sh -b
+```
+
+---
+
+#### Test
+
+Depuis la machine de développement :
+
+```shell
+ifnetshow -n 10.0.2.16 -a
+ifnetshow -n 10.0.2.16 -i eth0
+```
+
+Tout fonctionne.
+
+---
+
+Ce mini projet est terminé.
