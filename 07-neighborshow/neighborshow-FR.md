@@ -382,7 +382,307 @@ add_unique(found, &fcount, MAX_NEIGH, r_host);
 
 ### 7.2 Intégrer la commande *neighborshow* aux systèmes VyOS, Alpine et MicroCore.
 
+### VyOS :
 
+#### Préparer les binaires
+
+Sur la machine de développement on compile en statique :
+
+```shell
+sudo apt update
+sudo apt install -y musl-tools
+musl-gcc -static -O2 -Wall -Wextra -o neighborshow neighborshow.c
+musl-gcc -static -O2 -Wall -Wextra -o neighborshowd neighborshowd.c
+```
+
+---
+
+#### Créer l'emplacement persistant
+
+Sur VyOS :
+
+```shell
+mkdir -p /config/scripts/tools
+```
+
+---
+
+#### Copier les binaires avec HTTP
+
+Sur la machine de développement :
+
+```shell
+python3 -m http.server 8000
+```
+
+Sur VyOS :
+
+```shell
+curl -L http://10.0.2.8:8000/neighborshow  -o /config/scripts/tools/neighborshow
+curl -L http://10.0.2.8:8000/neighborshowd -o /config/scripts/tools/neighborshowd
+chmod 755 /config/scripts/tools/neighborshow /config/scripts/tools/neighborshowd
+```
+
+---
+
+#### Créer le script de boot
+
+On édit le fichier `/config/scripts/vyos-postconfig-bootup.script` :
+
+```shell
+#!/bin/sh
+# Projet 07 - intégration neighborshow/neighborshowd
+
+# 1. Binaires exécutables
+install -m 0755 /config/scripts/tools/neighborshow /usr/local/bin/neighborshow
+install -m 0755 /config/scripts/tools/neighborshowd /usr/local/bin/neighborshowd
+
+# 2. Démarrer l'agent si il n'est pas lancé
+if ! pgrep -x neighborshowd >/dev/null 2>&1; then
+  nohup /usr/local/bin/neighborshowd >/tmp/neighborshowd.log 2>&1 &
+fi
+```
+
+On le rend ensuite exécutable :
+
+```shell
+sudo chmod +x /config/scripts/vyos-postconfig-bootup.script
+```
+
+On vérifie que l'agent tourne :
+
+```
+pgrep -a neighborshowd
+sudo ss -lntp | grep 9091 || sudo netstat -lntp | grep 9091
+```
+
+On vérifie que les commandes sont bien disponibles :
+
+```shell
+which neighborshow
+which neighborshowd
+```
+
+---
+
+#### Test locaux
+
+Depuis VyOS ou la machine de développement :
+
+```
+./neighborshowd
+```
+
+Tout fonctionne.
+
+---
+
+### Alpine
+
+#### Préparer les binaires
+
+Sur la machine de développement on compile en statique :
+
+```shell
+sudo apt update
+sudo apt install -y musl-tools
+musl-gcc -static -O2 -Wall -Wextra -o neighborshow neighborshow.c
+musl-gcc -static -O2 -Wall -Wextra -o neighborshowd neighborshowd.c
+```
+
+---
+
+#### Récupérer les scripts
+
+```
+python3 -m http.server 8000
+```
+
+
+
+Sur Alpine :
+
+```shell
+mkdir -p /root/tools
+cd /root/tools
+
+wget http://10.0.2.8:8000/neighborshow 
+wget http://10.0.2.8:8000/neighborshowd 
+```
+
+---
+
+#### Intégration au système
+
+On installe les binaires dans `/usr/local/bin`
+
+```shell
+install -m 0755 neighborshow  /usr/local/bin/neighborshow
+install -m 0755 neighborshowd /usr/local/bin/neighborshowd
+```
+
+---
+
+#### Démarrage automatique 
+
+Alpine utilise **OpenRC**. On crée alors un service `neighborshowd`
+
+`cat >/etc/init.d/neighborshowd <<'EOF'`
+
+```shell
+#!/sbin/openrc-run
+
+name="neighborshowd"
+description="Agent projet 07 (neighborshowd)"
+command="/usr/local/bin/neighborshowd"
+command_background="yes"
+pidfile="/run/neighborshowd.pid"
+output_log="/var/log/neighborshowd.log"
+error_log="/var/log/neighborshowd.log"
+
+depend() {
+  need net
+}
+
+start_pre() {
+  checkpath -f -m 0644 -o root:root /var/log/neighborshowd.log
+}
+EOF
+```
+
+`chmod +x /etc/init.d/neighborshowd`
+
+
+
+#### Activer au boot
+
+```shell
+rc-update add neighborshowd default
+rc-service neighborshowd start
+```
+
+---
+
+#### Test depuis une autre machine
+
+Depuis la machine de développement :
+
+```shell
+./neighborshow
+```
+
+C'est bien fonctionnel.
+
+---
+
+### Microcore
+
+#### Récupérer les scripts
+
+Sur la machine de dev :
+
+```shell
+python3 -m http.server 8000
+```
+
+Sur Microcore :
+
+```
+cd /home/tc
+wget http://10.0.2.15:8000/neighborshow.c    
+wget http://10.0.2.15:8000/neighborshowd.c 
+```
+
+---
+
+#### Installer l'environnement de compilation
+
+```
+tce-load -wi compiletc
+```
+
+---
+
+#### Compiler
+
+```shell
+gcc -std=gnu99 -Wall -Wextra -O2 neighborshow.c  -o neighborshow
+gcc -std=gnu99 -Wall -Wextra -O2 neighborshowd.c -o neighborshowd
+```
+
+---
+
+#### Test
+
+```
+./neighborshowd
+```
+
+L'agent écoute bien sur le port 9091.
+
+---
+
+#### Intégration
+
+```shell
+mkdir -p /home/tc/bin
+cp /home/tc/neighborshow  /home/tc/bin/neighborshow
+cp /home/tc/neighborshowd /home/tc/bin/neighborshowd
+chmod 755 /home/tc/bin/neighborshow /home/tc/bin/neighborshowd
+```
+
+Ajout de `/home/tc/bin` au PATH :
+
+```shell
+echo 'export PATH=$PATH:/home/tc/bin' >> /home/tc/.profile
+. /home/tc/.profile
+```
+
+
+
+Test :
+
+```shell
+neighborshowd
+```
+
+---
+
+#### Démarrage automatique de l'agent au boot
+
+```shell
+#!/bin/sh
+
+export PATH=$PATH:/home/tc/bin
+
+if ! ps | grep -q "[n]eighborshowd"; then
+  nohup /home/tc/bin/neighborshowd >/tmp/neighborshowd.log 2>&1 &
+fi
+```
+
+`sudo chmod +x /opt/bootlocal.sh`
+
+---
+
+#### Persistance
+
+On sauvegarde :
+
+```shell
+filetool.sh -b	
+```
+
+---
+
+#### Test après reboot
+
+Depuis la machine de dev :
+
+```
+./neighborshow
+```
+
+Tout fonctionne.
 
 ---
 
