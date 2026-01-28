@@ -78,16 +78,18 @@ Nous pouvons désormais éteindre notre machine virtuelle et éjecter le disque 
 
 #### Mise  jour du système
 
-```bash
-apk update
-apk upgrade
-```
-
 On active les dépôts communautaires en retirant le `#` dans le fichier `/etc/apk/repositories` : `vi /etc/apk/repositories`
 
 ```bash
 https://dl-cdn.alpinelinux.org/alpine/v3.22/main
 https://dl-cdn.alpinelinux.org/alpine/v3.22/community
+```
+
+Puis on met à jour les paquets :
+
+```shell
+apk update
+apk upgrade
 ```
 
 ---
@@ -143,20 +145,23 @@ menuentry 'Alpine Linux (GUI)' {
 
 1. Outil interactif : `setup-desktop`
 
-On choisit `xfce`
+On choisit `lxqt`
 
 ---
 
 #### Création du runlevel GUI
 
-On ne souhaite pas que LightDM le mode graphique démarre automatiquement en mode "default". On crée un run level séparé nommé `gui`, qui sera invoqué seulement si l'on démarre en mode graphique par GRUB.
+On ne souhaite pas que `sddm` le mode graphique démarre automatiquement en mode "default". On crée un run level séparé nommé `graphical`, qui sera invoqué seulement si l'on démarre en mode graphique par GRUB.
 
 ```bash
 mkdir -p /etc/runlevels/graphical
 rc-update add -s default graphical
-rc-update add lightdm graphical
-rc-update add dbus default      
-rc-update del lightdm default
+
+rc-update add elogind graphical
+rc-update add dbus default     
+
+rc-update add sddm graphical
+rc-update del sddm default
 ```
 
 ---
@@ -183,8 +188,8 @@ On souhaite intégrer des logiciels et outils nécessaires au bon fonctionnement
 
 #### Installation des outils courants
 
-```
-apk add firefox-esr
+```shell
+apk add dillo # Dillo est léger mais on peut préciser son propre navigateur
 apk add filezilla
 apk add tcpdump
 apk add wireshark
@@ -197,7 +202,19 @@ On ajoute l'utilisateur au groupe Wireshark : `adduser ataha wireshark`
 
 #### Configuration sur la machine
 
-1. Mettre le clavier en français : depuis l'interface graphique.
+1. Mettre le clavier en français : 
+
+```shell
+doas mkdir -p /etc/X11/xorg.conf.d
+doas tee /etc/X11/xorg.conf.d/00-keyboard.conf >/dev/null <<'EOF'
+Section "InputClass"
+    Identifier "system-keyboard"
+    MatchIsKeyboard "on"
+    Option "XkbLayout" "fr"
+    Option "XkbVariant" "azerty"
+EndSection
+EOF
+```
 
 2. Installation de `zsh`
 
@@ -241,18 +258,50 @@ Installons les Guest Additions VirtualBox.
 
 1. Installation des Guest Additions
 
-```
-apk add virtualbox-guest-additions virtualbox-guest-additions-x11
+```shell
+apk update
+apk add virtualbox-guest-additions virtualbox-guest-additions-x11 virtualbox-guest-additions-openrc
+apk add xf86-video-modesetting
 ```
 
 2. Ajout des Guest Additions au démarrage
 
 ```
-rc-update add virtualbox-guest-additions boot
-rc-update virtualbox add virtualbox-drm boot
+rc-update add virtualbox-guest-additions default
+rc-service virtualbox-guest-additions start
 ```
 
-3. Depuis VirtualBox : `General --> Advanced : Shared Clipboard & Drag'n'Drop : Bidirectionnal `
+3. Forcer le driver :
+
+```shell
+mkdir -p /etc/X11/xorg.conf.d
+cat > /etc/X11/xorg.conf.d/20-modesetting.conf <<'EOF'
+Section "Device"
+ Identifier "VirtualBox Graphics"
+ Driver "modesetting"
+EndSection
+EOF
+```
+
+4. Charger `vboxvideo`
+
+```shell
+echo vboxvideo >> /etc/modules
+modprobe vboxvideo
+```
+
+5. Autostart
+
+```shell
+mkdir -p ~/.config/autostart
+cat > ~/.config/autostart/vboxclient.desktop <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=VirtualBox Client (auto-resize)
+Exec=sh -lc 'VBoxClient-all & (sleep 2; /usr/sbin/VBoxClient --vmsvga -f) &'
+X-GNOME-Autostart-enabled=true
+EOF
+```
 
 ---
 
