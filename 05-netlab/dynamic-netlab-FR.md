@@ -225,7 +225,7 @@ exit
 ###### R0 -> R1
 
 ```shell
-ping -c1 192.168.38.17
+ping -c2 192.168.38.17
 ```
 
 ---
@@ -233,8 +233,8 @@ ping -c1 192.168.38.17
 ###### R1 -> R0 et R2
 
 ```shell
-ping 192.168.38.18
-ping 192.168.38.6
+ping -c2 192.168.38.18
+ping -c2 192.168.38.6
 ```
 
 ---
@@ -257,9 +257,15 @@ Les tests de communication sont censés être fonctionnels à ce niveau.
 
 ```shell
 configure
-set protocols static route 10.38.3.0/24 next-hop 192.168.38.17
-set protocols static route 172.16.0.0/24 next-hop 192.168.38.17
-set protocols static route 192.168.38.4/30 next-hop 192.168.38.17
+
+set protocols ospf parameters router-id 1.1.1.1
+set protocols ospf interface eth0 area 0
+set protocols ospf interface eth1 area 0
+set protocols ospf interface eth2 area 0
+
+set protocols ospf interface eth0 passive
+set protocols ospf interface eth1 passive
+
 commit
 save
 exit
@@ -273,12 +279,17 @@ exit
 
 ```shell
 configure
-set protocols static route 10.38.1.0/24 next-hop 192.168.38.18
-set protocols static route 10.38.2.0/24 next-hop 192.168.38.18
-set protocols static route 10.38.3.0/24 next-hop 192.168.38.6
+set protocols ospf parameters router-id 2.2.2.2
+set protocols ospf interface eth0 area 0
+set protocols ospf interface eth1 area 0
+set protocols ospf interface eth2 area 0
+
+set protocols ospf interface eth0 passive
+
 commit
 save
 exit
+
 ```
 
 ---
@@ -289,13 +300,17 @@ exit
 
 ```shell
 configure
-set protocols static route 10.38.1.0/24 next-hop 192.168.38.5
-set protocols static route 10.38.2.0/24 next-hop 192.168.38.5
-set protocols static route 172.16.0.0/24 next-hop 192.168.38.5
-set protocols static route 192.168.38.16/28 next-hop 192.168.38.5
+
+set protocols ospf parameters router-id 3.3.3.3
+set protocols ospf interface eth0 area 0
+set protocols ospf interface eth1 area 0
+
+set protocols ospf interface eth0 passive
+
 commit
 save
 exit
+
 ```
 
 ---
@@ -328,7 +343,7 @@ ping 10.38.1.1
 ping 10.38.2.1
 ```
 
-Le routage IPv4 entre les routeurs fonctionnent correctement.
+Le routage IPv4 entre les routeurs fonctionne correctement.
 
 ---
 
@@ -408,6 +423,8 @@ Passons désormais à la configuration IPv4 de nos terminaux.
 
 ###### T1
 
+On change le hostname en modifiant le fichier `opt/bootsync.sh`.
+
 On adresse la machine et l'on ajoute une route par défaut.
 
 ```shell
@@ -420,6 +437,8 @@ sudo ip route add default via 10.38.1.1
 
 ###### T2
 
+On change également le hostname en modifiant le fichier `opt/bootsync.sh`.
+
 On adresse de la même manière la machine T2 en ajoutant une route par défaut.
 
 ```shell
@@ -431,6 +450,8 @@ sudo ip route add default via 10.38.2.1
 ---
 
 ###### T3
+
+On change à nouveau le hostname en modifiant le fichier `opt/bootsync.sh`.
 
 On effectue la même procédure sur T3.
 
@@ -475,7 +496,7 @@ Les pings sont tous fonctionnels.
 
 ##### Persistance
 
-Sur les trois machines on créé un fichier `/opt/bootsync.sh` avec les commandes précédentes.
+Sur les trois machines on modifie le fichier `/opt/bootsync.sh` avec les commandes précédentes.
 
 ---
 
@@ -627,9 +648,13 @@ Les tests sont fonctionnels.
 
 ```shell
 configure
-set protocols static route6 2001:0:38:3::/64 next-hop 3ffe:0:38:16::1
-set protocols static route6 2002:16:0:0::/64 next-hop 3ffe:0:38:16::1
-set protocols static route6 3ffe:0:38:4::/64 next-hop 3ffe:0:38:16::1
+set protocols ospfv3 parameters router-id 1.1.1.1
+set protocols ospfv3 interface eth0 area 0
+set protocols ospfv3 interface eth1 area 0
+set protocols ospfv3 interface eth2 area 0
+
+set protocols ospfv3 interface eth0 passive
+set protocols ospfv3 interface eth1 passive
 commit
 save
 exit
@@ -641,9 +666,13 @@ exit
 
 ```shell
 configure
-set protocols static route6 2001:0:38:1::/64 next-hop 3ffe:0:38:16::2
-set protocols static route6 2001:0:38:2::/64 next-hop 3ffe:0:38:16::2
-set protocols static route6 2001:0:38:3::/64 next-hop 3ffe:0:38:4::2
+set protocols ospfv3 parameters router-id 2.2.2.2
+set protocols ospfv3 interface eth0 area 0
+set protocols ospfv3 interface eth1 area 0
+set protocols ospfv3 interface eth2 area 0
+
+set protocols ospfv3 interface eth0 passive
+
 commit
 save
 exit
@@ -655,10 +684,11 @@ exit
 
 ```shell
 configure
-set protocols static route6 2001:0:38:1::/64 next-hop 3ffe:0:38:4::1
-set protocols static route6 2001:0:38:2::/64 next-hop 3ffe:0:38:4::1
-set protocols static route6 2002:16:0:0::/64 next-hop 3ffe:0:38:4::1
-set protocols static route6 3ffe:0:38:16::/64 next-hop 3ffe:0:38:4::1
+set protocols ospfv3 parameters router-id 3.3.3.3
+set protocols ospfv3 interface eth0 area 0
+set protocols ospfv3 interface eth1 area 0
+
+set protocols ospfv3 interface eth0 passive
 commit
 save
 exit
@@ -699,6 +729,8 @@ Les tests sont bien fonctionnels.
 ---
 
 ##### Activation des Router Avertissements (SLAAC)
+
+On configure le SLAAC pour l’auto-configuration IPv6 des terminaux par RA.
 
 ###### R0 
 
